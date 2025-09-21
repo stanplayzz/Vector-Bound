@@ -1,0 +1,106 @@
+#include "player.hpp"
+
+#include <exception>
+#include <print>
+#include <cmath>
+
+Player::Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight) : m_player(m_playerTexture)
+{
+	if (!m_playerTexture.loadFromFile("assets/textures/tileset.png"))
+	{
+		throw std::runtime_error("Failed to load tileset");
+	}
+
+	m_map = map;
+	m_mapWidth = mapWidth;
+	m_mapHeight = mapHeight;
+
+	m_scale = scale;
+	m_tileSize = tileSize;
+
+	m_player.setTextureRect(sf::IntRect({ col * tileSize, row * tileSize }, { tileSize, tileSize }));
+	m_player.setScale({ scale, scale });
+}
+
+bool Player::canMove(sf::Vector2f dir)
+{
+	if (m_map.getTileAt(dir.x + m_mapWidth / 2.f, dir.y + m_mapHeight / 2.f) == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+void Player::onEvent(std::optional<sf::Event> event)
+{
+	if (m_moving)
+		return;
+
+	if (auto key = event->getIf<sf::Event::KeyPressed>())
+	{
+		if (key->scancode == sf::Keyboard::Scancode::W)
+		{
+			if (canMove(sf::Vector2f(m_position.x, m_position.y -1)))
+			{
+				m_position.y += -1;
+			}
+		}
+		if (key->scancode == sf::Keyboard::Scancode::S)
+		{
+			if (canMove(sf::Vector2f(m_position.x, m_position.y + 1)))
+			{
+				m_position.y += 1;
+			}
+		}
+		if (key->scancode == sf::Keyboard::Scancode::A)
+		{
+			if (canMove(sf::Vector2f(m_position.x - 1, m_position.y)))
+			{
+				m_position.x += -1;
+			}
+		}
+		if (key->scancode == sf::Keyboard::Scancode::D)
+		{
+			if (canMove(sf::Vector2f(m_position.x + 1, m_position.y)))
+			{
+				m_position.x += 1;
+			}
+		}
+	}
+
+	m_targetPosition = sf::Vector2f(m_position * m_tileSize * m_scale);
+	if (m_targetPosition != m_currentPosition)
+		m_moving = true;
+}
+
+void Player::update(sf::Time deltaTime)
+{
+	if (!m_moving)
+		return;
+	
+
+	sf::Vector2f dir = m_targetPosition - m_currentPosition;
+	float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+
+	if (len > 0.1f)
+	{
+		sf::Vector2f norm = dir / len;
+		float moveDistance = m_movementSpeed * deltaTime.asSeconds();
+		if (moveDistance > len) 
+			moveDistance = len;
+		m_currentPosition += norm * moveDistance;
+	}
+	else
+	{
+		m_currentPosition = m_targetPosition;
+		m_moving = false;
+	}
+
+	m_player.setPosition(m_currentPosition);
+
+}
+
+void Player::draw(sf::RenderWindow& window)
+{
+	window.draw(m_player);
+}

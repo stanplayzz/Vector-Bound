@@ -1,6 +1,8 @@
 #include "game.hpp"
-
 #include "tileMap.hpp"
+#include "player.hpp"
+
+#include <print>
 
 sf::Vector2u TILE_SIZE(16, 16);
 unsigned int WIDTH = 8;
@@ -12,9 +14,9 @@ sf::Vector2f mapSize = sf::Vector2f(TILE_SIZE.x * WIDTH * SCALE,
 
 const int level[] = {
 	5, 5, 5, 5, 5, 5, 5, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 6, 0, 0, 0, 0, 5,
+	5, 0, 0, 0, 5, 0, 0, 5,
+	5, 0, 0, 0, 5, 0, 0, 5,
+	5, 0, 0, 0, 5, 5, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
@@ -41,17 +43,28 @@ int Game::run()
 		return -1;
 	}
 
+	Player player(SCALE, TILE_SIZE.x, 6, 0, map, WIDTH, HEIGHT);
+
+	sf::Clock clock;
+	sf::Time deltaTime;
+
 	while (m_window.isOpen())
 	{
 		while (auto event = m_window.pollEvent())
 		{
 			if (event->is<sf::Event::Closed>())
 				m_window.close();
+			player.onEvent(event);
 		}
+
+		deltaTime = clock.restart();
+
+		player.update(deltaTime);
 
 		m_window.clear(sf::Color(200, 150, 200));
 
 		m_window.draw(map);
+		player.draw(m_window);
 
 		m_window.display();
 	}

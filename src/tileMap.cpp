@@ -1,5 +1,7 @@
 #include "tileMap.hpp"
 
+#include <print>
+
 bool TileMap::load(sf::Vector2u tileSize, const int* tiles, unsigned int width, unsigned int height)
 {
 	if (!m_tileset.loadFromFile("assets/textures/tileset.png"))
@@ -9,6 +11,10 @@ bool TileMap::load(sf::Vector2u tileSize, const int* tiles, unsigned int width, 
 
 	m_vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
 	m_vertices.resize(width * height * 6);
+
+	m_tiles = tiles;
+	m_width = width;
+	m_height = height;
 
 	for (unsigned int i = 0; i < width; i++)
 	{
@@ -45,4 +51,14 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	states.transform *= getTransform();
 	states.texture = &m_tileset;
 	target.draw(m_vertices, states);
+}
+
+const int TileMap::getTileAt(int x, int y)
+{
+	if (x <= m_width && y <= m_height)
+	{
+		return m_tiles[x + y * m_width];
+	}
+
+	return 0;
 }

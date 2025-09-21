@@ -6,7 +6,7 @@
 
 Player::Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight) : m_player(m_playerTexture)
 {
-	if (!m_playerTexture.loadFromFile("assets/textures/tileset.png"))
+	if (!m_playerTexture.loadFromFile("assets/textures/player.png"))
 	{
 		throw std::runtime_error("Failed to load tileset");
 	}
@@ -18,8 +18,13 @@ Player::Player(float scale, int tileSize, int col, int row, TileMap map, float m
 	m_scale = scale;
 	m_tileSize = tileSize;
 
-	m_player.setTextureRect(sf::IntRect({ col * tileSize, row * tileSize }, { tileSize, tileSize }));
+	changeSprite(col, row);
 	m_player.setScale({ scale, scale });
+}
+
+void Player::changeSprite(int col, int row)
+{
+	m_player.setTextureRect(sf::IntRect({ col * m_tileSize, row * m_tileSize }, { m_tileSize, m_tileSize }));
 }
 
 bool Player::canMove(sf::Vector2f dir)
@@ -57,6 +62,9 @@ void Player::onEvent(std::optional<sf::Event> event)
 			if (canMove(sf::Vector2f(m_position.x - 1, m_position.y)))
 			{
 				m_position.x += -1;
+				if (m_currentDirection == 1)
+					changeSprite(m_currentFrame, 1);
+				m_currentDirection = -1;
 			}
 		}
 		if (key->scancode == sf::Keyboard::Scancode::D)
@@ -64,41 +72,74 @@ void Player::onEvent(std::optional<sf::Event> event)
 			if (canMove(sf::Vector2f(m_position.x + 1, m_position.y)))
 			{
 				m_position.x += 1;
+				if (m_currentDirection == -1)
+					changeSprite(m_currentFrame, 0);
+				m_currentDirection = 1;
 			}
 		}
 	}
 
-	m_targetPosition = sf::Vector2f(m_position * m_tileSize * m_scale);
+	m_targetPosition = sf::Vector2f(m_position * static_cast<float>(m_tileSize) * m_scale);
 	if (m_targetPosition != m_currentPosition)
 		m_moving = true;
 }
 
 void Player::update(sf::Time deltaTime)
 {
-	if (!m_moving)
-		return;
-	
-
-	sf::Vector2f dir = m_targetPosition - m_currentPosition;
-	float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-
-	if (len > 0.1f)
+	// movement
+	if (m_moving)
 	{
-		sf::Vector2f norm = dir / len;
-		float moveDistance = m_movementSpeed * deltaTime.asSeconds();
-		if (moveDistance > len) 
-			moveDistance = len;
-		m_currentPosition += norm * moveDistance;
-	}
-	else
-	{
-		m_currentPosition = m_targetPosition;
-		m_moving = false;
+		sf::Vector2f dir = m_targetPosition - m_currentPosition;
+		float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+
+		if (len > 0.1f)
+		{
+			sf::Vector2f norm = dir / len;
+			float moveDistance = m_movementSpeed * deltaTime.asSeconds();
+			if (moveDistance > len)
+				moveDistance = len;
+			m_currentPosition += norm * moveDistance;
+		}
+		else
+		{
+			m_currentPosition = m_targetPosition;
+			m_moving = false;
+		}
+		m_player.setPosition(m_currentPosition);
 	}
 
-	m_player.setPosition(m_currentPosition);
-
+	// animating
+	animate(deltaTime);
 }
+
+void Player::animate(sf::Time deltaTime)
+{
+	m_elapsedTime += deltaTime;
+	if (m_elapsedTime.asSeconds() >= m_animationSpeed)
+	{
+		m_elapsedTime -= sf::seconds(m_animationSpeed);
+
+		m_currentFrame += m_animationRight ? 1 : -1;
+		if (m_currentFrame >= m_stages)
+		{
+			m_currentFrame = m_stages - 2;
+			m_animationRight = false;
+		}
+		else if (m_currentFrame < 0)
+		{
+			m_currentFrame = 1;
+			m_animationRight = true;
+		}
+
+		int row = 0;
+		if (m_currentDirection == -1)
+			row = 1;
+		changeSprite(m_currentFrame, row);
+		if (m_currentFrame == 0)
+			m_elapsedTime -= sf::seconds(m_animationSpeed * 4);
+	}
+}
+
 
 void Player::draw(sf::RenderWindow& window)
 {

@@ -43,7 +43,7 @@ int Game::run()
 		return -1;
 	}
 
-	Player player(SCALE, TILE_SIZE.x, 6, 0, map, WIDTH, HEIGHT);
+	Player player(SCALE, TILE_SIZE.x, 0, 0, map, WIDTH, HEIGHT);
 
 	sf::Clock clock;
 	sf::Time deltaTime;

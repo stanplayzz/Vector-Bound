@@ -41,12 +41,11 @@ int Game::run()
 		throw std::runtime_error("Failed to load tileset");
 	}
 
-	Level level(TILE_SIZE, SCALE, WIDTH, HEIGHT, mapSize);
+	Level level(TILE_SIZE, SCALE, sf::Vector2i(WIDTH, HEIGHT));
 	level.blocks.push_back(Block(m_blockTileset, sf::Vector2f(1.f, 0.f), 3, 0, SCALE, TILE_SIZE));
 	level.blocks.push_back(Block(m_blockTileset, sf::Vector2f(-1.f, -1.f), 1, 0, SCALE, TILE_SIZE));
 	
-
-	Player player(SCALE, TILE_SIZE);
+	Player player(level);
 
 	sf::Clock clock;
 	sf::Time deltaTime;
@@ -62,7 +61,7 @@ int Game::run()
 
 		deltaTime = clock.restart();
 
-		player.update(deltaTime);
+		player.update(deltaTime, level);
 		level.update(deltaTime);
 
 		m_window.clear(sf::Color(200, 150, 200));

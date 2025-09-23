@@ -4,23 +4,21 @@
 #include <print>
 #include <cmath>
 
-Player::Player(float scale, int tileSize) : m_player(m_playerTexture)
+Player::Player(Level& level) : m_player(m_playerTexture)
 {
 	if (!m_playerTexture.loadFromFile("assets/textures/player.png"))
 	{
 		throw std::runtime_error("Failed to load playerset");
 	}
 
-	m_scale = scale;
-	m_tileSize = tileSize;
-
-	changeSprite(0, 0);
-	m_player.setScale({ scale, scale });
+	changeSprite(0, 0, level);
+	m_player.setScale(sf::Vector2f(level.map.scale, level.map.scale));
+	m_player.setPosition(m_position);
 }
 
-void Player::changeSprite(int col, int row)
+void Player::changeSprite(int col, int row, Level& level)
 {
-	m_player.setTextureRect(sf::IntRect({ col * m_tileSize, row * m_tileSize }, { m_tileSize, m_tileSize }));
+	m_player.setTextureRect(sf::IntRect({ col * level.map.tileSize, row * level.map.tileSize }, { level.map.tileSize, level.map.tileSize }));
 }
 
 bool Player::canMove(sf::Vector2i dir, TileMap const& map)
@@ -34,7 +32,7 @@ bool Player::canMove(sf::Vector2i dir, TileMap const& map)
 
 bool Player::push(sf::Vector2i targetPos, Level& level)
 {
-	sf::Vector2f targetPosition = sf::Vector2f(targetPos) * static_cast<float>(m_tileSize) * m_scale;
+	sf::Vector2f targetPosition = sf::Vector2f(targetPos) * static_cast<float>(level.map.tileSize) * static_cast<float>(level.map.scale);
 	for (auto& block : level.blocks)
 	{
 		std::println("{} {} {} {}", block.getPosition().x, block.getPosition().y, targetPosition.x, targetPosition.y);
@@ -51,7 +49,7 @@ bool Player::push(sf::Vector2i targetPos, Level& level)
 			default: return false;
 			}
 
-			sf::Vector2f offset = sf::Vector2f(gridOffset) * static_cast<float>(m_tileSize) * m_scale;
+			sf::Vector2f offset = sf::Vector2f(gridOffset) * static_cast<float>(level.map.tileSize) * static_cast<float>(level.map.scale);
 			sf::Vector2i nextGridPos = targetPos + gridOffset;
 			if (!canMove(nextGridPos, level.map) || !push(nextGridPos, level))
 				return false;
@@ -83,12 +81,12 @@ void Player::onEvent(sf::Event event, Level& level)
 			break;
 		case sf::Keyboard::Scancode::A:
 			gridOffset = { -1, 0 };
-			changeSprite(m_currentFrame, 1);
+			changeSprite(m_currentFrame, 1, level);
 			m_currentDirection = Direction::Left;
 			break;
 		case sf::Keyboard::Scancode::D:
 			gridOffset = { 1, 0 };
-			changeSprite(m_currentFrame, 0);
+			changeSprite(m_currentFrame, 0, level);
 			m_currentDirection = Direction::Right;
 			break;
 		default: break;
@@ -99,7 +97,7 @@ void Player::onEvent(sf::Event event, Level& level)
 			if (canMove(newGridPos, level.map) && push(newGridPos, level))
 			{
 				m_position = sf::Vector2f(newGridPos);
-				m_targetPosition = m_position * static_cast<float>(m_tileSize) * m_scale;
+				m_targetPosition = m_position * static_cast<float>(level.map.tileSize) * static_cast<float>(level.map.scale);
 				if (m_targetPosition != m_currentPosition)
 					m_moving = true;
 			}
@@ -107,7 +105,7 @@ void Player::onEvent(sf::Event event, Level& level)
 	}
 }
 
-void Player::update(sf::Time deltaTime)
+void Player::update(sf::Time deltaTime, Level& level)
 {
 	// movement
 	if (m_moving)
@@ -134,10 +132,10 @@ void Player::update(sf::Time deltaTime)
 	
 
 	// animating
-	animate(deltaTime);
+	animate(deltaTime, level);
 }
 
-void Player::animate(sf::Time deltaTime)
+void Player::animate(sf::Time deltaTime, Level& level)
 {
 	m_elapsedTime += deltaTime;
 	if (m_elapsedTime.asSeconds() >= m_animationSpeed)
@@ -159,7 +157,7 @@ void Player::animate(sf::Time deltaTime)
 		int row = 0;
 		if (m_currentDirection == Direction::Left)
 			row = 1;
-		changeSprite(m_currentFrame, row);
+		changeSprite(m_currentFrame, row, level);
 		if (m_currentFrame == 0)
 			m_elapsedTime -= sf::seconds(m_animationSpeed * 4);
 	}

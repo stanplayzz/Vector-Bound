@@ -14,9 +14,9 @@ sf::Vector2f mapSize = sf::Vector2f(TILE_SIZE.x * WIDTH * SCALE,
 
 const int level[] = {
 	5, 5, 5, 5, 5, 5, 5, 5,
-	5, 0, 0, 0, 5, 0, 0, 5,
-	5, 0, 0, 0, 5, 0, 0, 5,
-	5, 0, 0, 0, 5, 5, 0, 5,
+	5, 0, 0, 0, 0, 0, 0, 5,
+	5, 0, 0, 0, 0, 0, 0, 5,
+	5, 0, 0, 0, 0, 0, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
 	5, 0, 0, 0, 0, 0, 0, 5,
@@ -43,7 +43,17 @@ int Game::run()
 		return -1;
 	}
 
-	Player player(SCALE, TILE_SIZE.x, 0, 0, map, WIDTH, HEIGHT);
+
+
+	m_blockTileset = std::make_shared<sf::Texture>();
+	if (!m_blockTileset->loadFromFile("assets/textures/tileset.png"))
+	{
+		throw std::runtime_error("Failed to load tileset");
+	}
+	m_blocks.push_back(Block(m_blockTileset, sf::Vector2f(1.f, 0.f), 3, 0, SCALE, TILE_SIZE.x));
+	m_blocks.push_back(Block(m_blockTileset, sf::Vector2f(-1.f, 0.f), 1, 0, SCALE, TILE_SIZE.x));
+
+	Player player(SCALE, TILE_SIZE.x, 0, 0, map, WIDTH, HEIGHT, m_blocks);
 
 	sf::Clock clock;
 	sf::Time deltaTime;
@@ -65,6 +75,8 @@ int Game::run()
 
 		m_window.draw(map);
 		player.draw(m_window);
+		for (auto& block : m_blocks)
+			block.draw(m_window);
 
 		m_window.display();
 	}

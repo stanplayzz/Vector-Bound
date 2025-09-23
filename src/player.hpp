@@ -1,12 +1,22 @@
 #pragma once
 #include "tileMap.hpp"
+#include "block.hpp"
 
 #include <SFML/Graphics.hpp>
+
+enum class Direction
+{
+	None,
+	Up,
+	Down,
+	Left,
+	Right
+};
 
 class Player
 {
 public:
-	Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight);
+	Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight, std::vector<Block>& blocks);
 	void onEvent(std::optional<sf::Event> event);
 	void update(sf::Time deltaTime);
 	void draw(sf::RenderWindow& window);
@@ -15,6 +25,7 @@ private:
 	bool canMove(sf::Vector2f dir);
 	void changeSprite(int col, int row);
 	void animate(sf::Time deltaTime);
+	bool push(sf::Vector2f targetPos);
 
 	// player
 	float m_scale;
@@ -26,13 +37,14 @@ private:
 	TileMap m_map;
 	float m_mapWidth;
 	float m_mapHeight;
+	std::vector<Block>& m_blocks;
 
 	// movement
 	float m_movementSpeed = 300.f;
 	sf::Vector2f m_position;
 	sf::Vector2f m_currentPosition;
 	sf::Vector2f m_targetPosition;
-	float m_currentDirection = 1;
+	Direction m_currentDirection = Direction::None;
 	bool m_moving = false;
 
 	// animation

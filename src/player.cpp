@@ -4,16 +4,17 @@
 #include <print>
 #include <cmath>
 
-Player::Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight) : m_player(m_playerTexture)
+Player::Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight, std::vector<Block>& blocks) : m_player(m_playerTexture), m_blocks(blocks)
 {
 	if (!m_playerTexture.loadFromFile("assets/textures/player.png"))
 	{
-		throw std::runtime_error("Failed to load tileset");
+		throw std::runtime_error("Failed to load playerset");
 	}
 
 	m_map = map;
 	m_mapWidth = mapWidth;
 	m_mapHeight = mapHeight;
+	m_blocks = blocks;
 
 	m_scale = scale;
 	m_tileSize = tileSize;
@@ -29,11 +30,60 @@ void Player::changeSprite(int col, int row)
 
 bool Player::canMove(sf::Vector2f dir)
 {
-	if (m_map.getTileAt(dir.x + m_mapWidth / 2.f, dir.y + m_mapHeight / 2.f) == 0)
+	if (m_map.getTileAt(dir.x + m_mapWidth / 2.f, dir.y + m_mapHeight / 2.f) != 5)
 	{
 		return true;
 	}
 	return false;
+}
+
+bool Player::push(sf::Vector2f targetPos)
+{
+	sf::Vector2f targetPosition = targetPos * static_cast<float>(m_tileSize) * m_scale;
+	for (auto& block : m_blocks)
+	{
+		if (block.getPosition() == targetPosition)
+		{
+			sf::Vector2f currentPos = block.getPosition();
+			if (m_currentDirection == Direction::Up)
+			{
+				sf::Vector2f newPos = currentPos + sf::Vector2f(0, -static_cast<float>(m_tileSize) * m_scale);
+				if (!canMove({ targetPos.x, targetPos.y - 1 }))
+					return false;
+				if (!push({ targetPos.x, targetPos.y - 1 }))
+					return false;
+				block.moveTo(newPos);
+			}
+			if (m_currentDirection == Direction::Down)
+			{
+				sf::Vector2f newPos = currentPos + sf::Vector2f(0, static_cast<float>(m_tileSize) * m_scale);
+				if (!canMove({ targetPos.x, targetPos.y + 1 }))
+					return false;
+				if (!push({ targetPos.x, targetPos.y + 1 }))
+					return false;
+				block.moveTo(newPos);
+			}
+			if (m_currentDirection == Direction::Left)
+			{
+				sf::Vector2f newPos = currentPos + sf::Vector2f(-static_cast<float>(m_tileSize) * m_scale, 0);
+				if (!canMove({ targetPos.x - 1, targetPos.y }))
+					return false;
+				if (!push({ targetPos.x - 1 , targetPos.y}))
+					return false;
+				block.moveTo(newPos);
+			}
+			if (m_currentDirection == Direction::Right)
+			{
+				sf::Vector2f newPos = currentPos + sf::Vector2f(static_cast<float>(m_tileSize) * m_scale, 0);
+				if (!canMove({ targetPos.x + 1, targetPos.y }))
+					return false;
+				if (!push({ targetPos.x + 1, targetPos.y }))
+					return false;
+				block.moveTo(newPos);
+			}
+		}
+	}
+	return true;
 }
 
 void Player::onEvent(std::optional<sf::Event> event)
@@ -41,47 +91,58 @@ void Player::onEvent(std::optional<sf::Event> event)
 	if (m_moving)
 		return;
 
+	sf::Vector2f newPos = m_position;
+
 	if (auto key = event->getIf<sf::Event::KeyPressed>())
 	{
 		if (key->scancode == sf::Keyboard::Scancode::W)
 		{
 			if (canMove(sf::Vector2f(m_position.x, m_position.y -1)))
 			{
-				m_position.y += -1;
+				m_currentDirection = Direction::Up;
+				newPos.y += -1;
 			}
 		}
 		if (key->scancode == sf::Keyboard::Scancode::S)
 		{
 			if (canMove(sf::Vector2f(m_position.x, m_position.y + 1)))
 			{
-				m_position.y += 1;
+				m_currentDirection = Direction::Down;
+				newPos.y += 1;
 			}
 		}
 		if (key->scancode == sf::Keyboard::Scancode::A)
 		{
 			if (canMove(sf::Vector2f(m_position.x - 1, m_position.y)))
 			{
-				m_position.x += -1;
-				if (m_currentDirection == 1)
+				newPos.x += -1;
+				if (m_currentDirection == Direction::Right)
 					changeSprite(m_currentFrame, 1);
-				m_currentDirection = -1;
+				m_currentDirection = Direction::Left;
 			}
 		}
 		if (key->scancode == sf::Keyboard::Scancode::D)
 		{
 			if (canMove(sf::Vector2f(m_position.x + 1, m_position.y)))
 			{
-				m_position.x += 1;
-				if (m_currentDirection == -1)
+				newPos.x += 1;
+				if (m_currentDirection == Direction::Left)
 					changeSprite(m_currentFrame, 0);
-				m_currentDirection = 1;
+				m_currentDirection = Direction::Right;
 			}
 		}
 	}
 
-	m_targetPosition = sf::Vector2f(m_position * static_cast<float>(m_tileSize) * m_scale);
-	if (m_targetPosition != m_currentPosition)
-		m_moving = true;
+	if (push(newPos))
+	{
+		m_position = newPos;
+		m_targetPosition = sf::Vector2f(m_position * static_cast<float>(m_tileSize) * m_scale);
+		if (m_targetPosition != m_currentPosition)
+		{
+			m_moving = true;
+		}
+	}
+	
 }
 
 void Player::update(sf::Time deltaTime)
@@ -108,6 +169,11 @@ void Player::update(sf::Time deltaTime)
 		m_player.setPosition(m_currentPosition);
 	}
 
+	for (auto& block : m_blocks)
+	{
+		block.update(deltaTime);
+	}
+
 	// animating
 	animate(deltaTime);
 }
@@ -132,7 +198,7 @@ void Player::animate(sf::Time deltaTime)
 		}
 
 		int row = 0;
-		if (m_currentDirection == -1)
+		if (m_currentDirection == Direction::Left)
 			row = 1;
 		changeSprite(m_currentFrame, row);
 		if (m_currentFrame == 0)

@@ -45,42 +45,22 @@ bool Player::push(sf::Vector2f targetPos)
 		if (block.getPosition() == targetPosition)
 		{
 			sf::Vector2f currentPos = block.getPosition();
-			if (m_currentDirection == Direction::Up)
+			sf::Vector2i gridOffset;
+			switch (m_currentDirection)
 			{
-				sf::Vector2f newPos = currentPos + sf::Vector2f(0, -static_cast<float>(m_tileSize) * m_scale);
-				if (!canMove({ targetPos.x, targetPos.y - 1 }))
-					return false;
-				if (!push({ targetPos.x, targetPos.y - 1 }))
-					return false;
-				block.moveTo(newPos);
+			case Direction::Up:    gridOffset = { 0, -1 }; break;
+			case Direction::Down:  gridOffset = { 0,  1 }; break;
+			case Direction::Left:  gridOffset = { -1, 0 }; break;
+			case Direction::Right: gridOffset = {  1, 0 }; break;
+			default: return false;
 			}
-			if (m_currentDirection == Direction::Down)
-			{
-				sf::Vector2f newPos = currentPos + sf::Vector2f(0, static_cast<float>(m_tileSize) * m_scale);
-				if (!canMove({ targetPos.x, targetPos.y + 1 }))
-					return false;
-				if (!push({ targetPos.x, targetPos.y + 1 }))
-					return false;
-				block.moveTo(newPos);
-			}
-			if (m_currentDirection == Direction::Left)
-			{
-				sf::Vector2f newPos = currentPos + sf::Vector2f(-static_cast<float>(m_tileSize) * m_scale, 0);
-				if (!canMove({ targetPos.x - 1, targetPos.y }))
-					return false;
-				if (!push({ targetPos.x - 1 , targetPos.y}))
-					return false;
-				block.moveTo(newPos);
-			}
-			if (m_currentDirection == Direction::Right)
-			{
-				sf::Vector2f newPos = currentPos + sf::Vector2f(static_cast<float>(m_tileSize) * m_scale, 0);
-				if (!canMove({ targetPos.x + 1, targetPos.y }))
-					return false;
-				if (!push({ targetPos.x + 1, targetPos.y }))
-					return false;
-				block.moveTo(newPos);
-			}
+
+			sf::Vector2f offset = sf::Vector2f(gridOffset) * static_cast<float>(m_tileSize) * m_scale;
+			sf::Vector2f nextGridPos = targetPos + sf::Vector2f(gridOffset);
+			if (!canMove(nextGridPos) || !push(nextGridPos))
+				return false;
+
+			block.moveTo(block.getPosition() + offset);
 		}
 	}
 	return true;

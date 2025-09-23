@@ -1,6 +1,5 @@
 #pragma once
-#include "tileMap.hpp"
-#include "block.hpp"
+#include "level.hpp"
 
 #include <SFML/Graphics.hpp>
 
@@ -16,28 +15,22 @@ enum class Direction
 class Player
 {
 public:
-	Player(float scale, int tileSize, int col, int row, TileMap map, float mapWidth, float mapHeight, std::vector<Block>& blocks);
-	void onEvent(std::optional<sf::Event> event);
+	Player(float scale, int tileSize);
+	void onEvent(sf::Event event, Level& level);
 	void update(sf::Time deltaTime);
 	void draw(sf::RenderWindow& window);
 
 private:
-	bool canMove(sf::Vector2i dir);
+	bool canMove(sf::Vector2i dir, TileMap const& map);
 	void changeSprite(int col, int row);
 	void animate(sf::Time deltaTime);
-	bool push(sf::Vector2i targetPos);
+	bool push(sf::Vector2i targetPos, Level& level);
 
 	// player
 	float m_scale;
 	int m_tileSize;
 	sf::Texture m_playerTexture;
 	sf::Sprite m_player;
-
-	// map initializations
-	TileMap m_map;
-	float m_mapWidth;
-	float m_mapHeight;
-	std::vector<Block>& m_blocks;
 
 	// movement
 	float m_movementSpeed = 300.f;

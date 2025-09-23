@@ -1,5 +1,6 @@
 #pragma once
 #include "block.hpp"
+#include "tileMap.hpp"
 
 #include <SFML/Graphics.hpp>
 
@@ -13,9 +14,8 @@ public:
 private:
 	sf::RenderWindow m_window;
 	sf::View m_view;
-
+	
 	std::shared_ptr<sf::Texture> m_blockTileset;
-	std::vector<Block> m_blocks;
 
 	int run();
 };

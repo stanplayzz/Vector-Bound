@@ -28,7 +28,7 @@ void Player::changeSprite(int col, int row)
 	m_player.setTextureRect(sf::IntRect({ col * m_tileSize, row * m_tileSize }, { m_tileSize, m_tileSize }));
 }
 
-bool Player::canMove(sf::Vector2f dir)
+bool Player::canMove(sf::Vector2i dir)
 {
 	if (m_map.getTileAt(dir.x + m_mapWidth / 2.f, dir.y + m_mapHeight / 2.f) != 5)
 	{
@@ -37,9 +37,9 @@ bool Player::canMove(sf::Vector2f dir)
 	return false;
 }
 
-bool Player::push(sf::Vector2f targetPos)
+bool Player::push(sf::Vector2i targetPos)
 {
-	sf::Vector2f targetPosition = targetPos * static_cast<float>(m_tileSize) * m_scale;
+	sf::Vector2f targetPosition = sf::Vector2f(targetPos) * static_cast<float>(m_tileSize) * m_scale;
 	for (auto& block : m_blocks)
 	{
 		if (block.getPosition() == targetPosition)
@@ -56,7 +56,7 @@ bool Player::push(sf::Vector2f targetPos)
 			}
 
 			sf::Vector2f offset = sf::Vector2f(gridOffset) * static_cast<float>(m_tileSize) * m_scale;
-			sf::Vector2f nextGridPos = targetPos + sf::Vector2f(gridOffset);
+			sf::Vector2i nextGridPos = targetPos + gridOffset;
 			if (!canMove(nextGridPos) || !push(nextGridPos))
 				return false;
 
@@ -71,58 +71,46 @@ void Player::onEvent(std::optional<sf::Event> event)
 	if (m_moving)
 		return;
 
-	sf::Vector2f newPos = m_position;
-
 	if (auto key = event->getIf<sf::Event::KeyPressed>())
 	{
-		if (key->scancode == sf::Keyboard::Scancode::W)
-		{
-			if (canMove(sf::Vector2f(m_position.x, m_position.y -1)))
-			{
-				m_currentDirection = Direction::Up;
-				newPos.y += -1;
-			}
-		}
-		if (key->scancode == sf::Keyboard::Scancode::S)
-		{
-			if (canMove(sf::Vector2f(m_position.x, m_position.y + 1)))
-			{
-				m_currentDirection = Direction::Down;
-				newPos.y += 1;
-			}
-		}
-		if (key->scancode == sf::Keyboard::Scancode::A)
-		{
-			if (canMove(sf::Vector2f(m_position.x - 1, m_position.y)))
-			{
-				newPos.x += -1;
-				if (m_currentDirection == Direction::Right)
-					changeSprite(m_currentFrame, 1);
-				m_currentDirection = Direction::Left;
-			}
-		}
-		if (key->scancode == sf::Keyboard::Scancode::D)
-		{
-			if (canMove(sf::Vector2f(m_position.x + 1, m_position.y)))
-			{
-				newPos.x += 1;
-				if (m_currentDirection == Direction::Left)
-					changeSprite(m_currentFrame, 0);
-				m_currentDirection = Direction::Right;
-			}
-		}
-	}
+		sf::Vector2i gridOffset(0, 0);
 
-	if (push(newPos))
-	{
-		m_position = newPos;
-		m_targetPosition = sf::Vector2f(m_position * static_cast<float>(m_tileSize) * m_scale);
-		if (m_targetPosition != m_currentPosition)
+		switch (key->scancode)
 		{
-			m_moving = true;
+		case sf::Keyboard::Scancode::W:
+			gridOffset = { 0, -1 };
+			m_currentDirection = Direction::Up;
+			break;
+		case sf::Keyboard::Scancode::S:
+			gridOffset = { 0, 1 };
+			m_currentDirection = Direction::Down;
+			break;
+		case sf::Keyboard::Scancode::A:
+			gridOffset = { -1, 0 };
+			if (m_currentDirection == Direction::Right)
+				changeSprite(m_currentFrame, 1);
+			m_currentDirection = Direction::Left;
+			break;
+		case sf::Keyboard::Scancode::D:
+			gridOffset = { 1, 0 };
+			if (m_currentDirection == Direction::Left)
+				changeSprite(m_currentFrame, 0);
+			m_currentDirection = Direction::Right;
+			break;
+		default: break;
+		}
+		if (gridOffset != sf::Vector2i(0,0))
+		{
+			sf::Vector2i newGridPos = sf::Vector2i(m_position) + sf::Vector2i(gridOffset);
+			if (canMove(newGridPos) && push(newGridPos))
+			{
+				m_position = sf::Vector2f(newGridPos);
+				m_targetPosition = m_position * static_cast<float>(m_tileSize) * m_scale;
+				if (m_targetPosition != m_currentPosition)
+					m_moving = true;
+			}
 		}
 	}
-	
 }
 
 void Player::update(sf::Time deltaTime)

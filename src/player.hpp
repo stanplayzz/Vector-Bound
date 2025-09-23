@@ -22,10 +22,10 @@ public:
 	void draw(sf::RenderWindow& window);
 
 private:
-	bool canMove(sf::Vector2f dir);
+	bool canMove(sf::Vector2i dir);
 	void changeSprite(int col, int row);
 	void animate(sf::Time deltaTime);
-	bool push(sf::Vector2f targetPos);
+	bool push(sf::Vector2i targetPos);
 
 	// player
 	float m_scale;

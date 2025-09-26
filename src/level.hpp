@@ -6,9 +6,11 @@
 struct Level
 {
 	TileMap map;
-	std::vector<Block> blocks;
+	BlockManager blockManager;
 
 	Level(int tileSize, int scale, sf::Vector2i size);
 	void update(sf::Time deltaTime);
 	void draw(sf::RenderWindow& window);
+	
+	bool hasWon = false;
 };

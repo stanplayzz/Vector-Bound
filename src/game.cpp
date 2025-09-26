@@ -13,17 +13,6 @@ float SCALE = 4.f;
 sf::Vector2f mapSize = sf::Vector2f(TILE_SIZE * WIDTH * SCALE,
 									TILE_SIZE * HEIGHT * SCALE);
 
-const int levelPrefab[] = {
-	5, 5, 5, 5, 5, 5, 5, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 0, 0, 0, 0, 0, 0, 5,
-	5, 5, 5, 5, 5, 5, 5, 5,
-};
-
 Game::Game()
 {
 	m_window.create(sf::VideoMode({ 512, 512 }), "Vector Bound", sf::Style::Close);
@@ -42,8 +31,6 @@ int Game::run()
 	}
 
 	Level level(TILE_SIZE, SCALE, sf::Vector2i(WIDTH, HEIGHT));
-	level.blocks.push_back(Block(m_blockTileset, sf::Vector2f(1.f, 0.f), 3, 0, SCALE, TILE_SIZE));
-	level.blocks.push_back(Block(m_blockTileset, sf::Vector2f(-1.f, -1.f), 1, 0, SCALE, TILE_SIZE));
 	
 	Player player(level);
 
@@ -64,7 +51,7 @@ int Game::run()
 		player.update(deltaTime, level);
 		level.update(deltaTime);
 
-		m_window.clear(sf::Color(200, 150, 200));
+		m_window.clear(sf::Color(70, 70, 70));
 
 		level.draw(m_window);
 		player.draw(m_window);

@@ -13,7 +13,6 @@ Player::Player(Level& level) : m_player(m_playerTexture)
 
 	changeSprite(0, 0, level);
 	m_player.setScale(sf::Vector2f(level.map.scale, level.map.scale));
-	m_player.setPosition(m_position);
 }
 
 void Player::changeSprite(int col, int row, Level& level)
@@ -33,12 +32,11 @@ bool Player::canMove(sf::Vector2i dir, TileMap const& map)
 bool Player::push(sf::Vector2i targetPos, Level& level)
 {
 	sf::Vector2f targetPosition = sf::Vector2f(targetPos) * static_cast<float>(level.map.tileSize) * static_cast<float>(level.map.scale);
-	for (auto& block : level.blocks)
+	for (auto& block : level.blockManager.blocks)
 	{
-		std::println("{} {} {} {}", block.getPosition().x, block.getPosition().y, targetPosition.x, targetPosition.y);
-		if (block.getPosition() == targetPosition)
+		if (block.sprite.getPosition() == targetPosition)
 		{
-			sf::Vector2f currentPos = block.getPosition();
+			sf::Vector2f currentPos = block.sprite.getPosition();
 			sf::Vector2i gridOffset;
 			switch (m_currentDirection)
 			{
@@ -54,7 +52,7 @@ bool Player::push(sf::Vector2i targetPos, Level& level)
 			if (!canMove(nextGridPos, level.map) || !push(nextGridPos, level))
 				return false;
 
-			block.moveTo(block.getPosition() + offset);
+			level.blockManager.moveTo(block, block.sprite.getPosition() + offset);
 		}
 	}
 	return true;
@@ -93,7 +91,7 @@ void Player::onEvent(sf::Event event, Level& level)
 		}
 		if (gridOffset != sf::Vector2i(0,0))
 		{
-			sf::Vector2i newGridPos = sf::Vector2i(m_position) + sf::Vector2i(gridOffset);
+			sf::Vector2i newGridPos = sf::Vector2i(std::round(m_position.x), std::round(m_position.y)) + gridOffset;
 			if (canMove(newGridPos, level.map) && push(newGridPos, level))
 			{
 				m_position = sf::Vector2f(newGridPos);

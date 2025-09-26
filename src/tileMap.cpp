@@ -2,13 +2,12 @@
 
 #include <print>
 
-bool TileMap::load(sf::Vector2u tilesize, const int* tiles, sf::Vector2i size)
+bool TileMap::load(sf::Vector2u tilesize, const int* tiles, sf::Vector2i size, int Scale)
 {
 	if (!m_tileset.loadFromFile("assets/textures/tileset.png"))
 	{
 		return false;
 	}
-
 	m_vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
 	m_vertices.resize(size.x * size.y * 6);
 
@@ -16,6 +15,7 @@ bool TileMap::load(sf::Vector2u tilesize, const int* tiles, sf::Vector2i size)
 	width = size.x;
 	height = size.y;
 	tileSize = tilesize.x;
+	scale = Scale;
 
 	for (unsigned int i = 0; i < size.x; i++)
 	{

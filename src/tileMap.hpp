@@ -4,10 +4,10 @@
 
 #include <string>
 
-class TileMap : public sf::Drawable, public sf::Transformable
-{
+class TileMap : public sf::Drawable, public sf::Transformable {
 public:
-	bool load(sf::Vector2u tileSize, const int* tiles, sf::Vector2i size, int scale);
+	TileMap(sf::Vector2u tilesize, sf::Vector2i size, int Scale);
+	bool load(std::vector<int> tiles);
 	int getTileAt(sf::Vector2i position) const;
 	int width{};
 	int height{};
@@ -19,5 +19,5 @@ private:
 
 	sf::VertexArray m_vertices;
 	sf::Texture m_tileset;
-	const int* m_tiles{};
+	std::vector<int> m_tiles{};
 };

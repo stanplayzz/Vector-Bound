@@ -5,8 +5,7 @@
 #include <memory>
 
 
-enum class BlockType
-{
+enum class BlockType {
 	Red = 1,
 	Blue = 2,
 	Green = 3,
@@ -14,8 +13,7 @@ enum class BlockType
 	Unbreakable = 5
 };
 
-struct Block
-{
+struct Block {
 	BlockType type;
 	sf::Sprite sprite;
 	sf::Sprite targetSprite;
@@ -26,8 +24,7 @@ struct Block
 
 class Level;
 
-class BlockManager
-{
+class BlockManager {
 public:
 	BlockManager();
 	void addBlock(BlockType type, sf::Vector2i gridPosition, sf::Vector2i targetGridPosition, Level& level);

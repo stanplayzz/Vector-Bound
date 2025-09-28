@@ -3,8 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
-enum class Direction
-{
+enum class Direction {
 	None,
 	Up,
 	Down,
@@ -12,16 +11,14 @@ enum class Direction
 	Right
 };
 
-struct Move
-{
+struct Move {
 	sf::Vector2f oldPlayerPos;
 	sf::Vector2f newPlayerPos;
 	std::vector<sf::Vector2f> oldBlockPositions;
 	std::vector<sf::Vector2f> newBlockPositions;
 };
 
-class Player
-{
+class Player {
 public:
 	Player(Level& level);
 	void onEvent(sf::Event event, Level& level);
@@ -41,8 +38,8 @@ private:
 
 	// movement
 	float m_movementSpeed = 300.f;
-	sf::Vector2f m_position{0.f,0.f};
-	sf::Vector2f m_currentPosition{0.f, 0.f};
+	sf::Vector2f m_position{ 0.f,0.f };
+	sf::Vector2f m_currentPosition{ 0.f, 0.f };
 	sf::Vector2f m_targetPosition{ 0.f, 0.f };
 	Direction m_currentDirection = Direction::None;
 	bool m_moving = false;
